@@ -1,0 +1,6 @@
+name "densor"
+description "A simple tensor library for D."
+authors "rillki"
+copyright "Copyright © 2025, rillki"
+license "MIT"
+targetPath "bin"
