@@ -1,0 +1,2 @@
+module rk.densor.tensor;
+
