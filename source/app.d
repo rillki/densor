@@ -3,9 +3,18 @@ module app;
 import std.stdio;
 import mir.ndslice; 
 
+import rk.densor;
+
 void main()
 {
-    auto v = slice!float(2, 2);
+    auto v = new Tensor!(float, [2, 2])(42);
+    auto w = new Tensor!(float, [2, 2])(v);
+    v.data[] = 12;
+    writeln(w.data);
 
-    writeln(typeof(v));
+    auto x = tensor!([2, 2])(-3);
+    auto y = tensor!([2, 2])([1, 2, 3, 4]);
+    auto z = tensor!([2, 2])(x);
+    x.data[] = 1;
+    writeln(x.data, "\n", z.data);
 }
