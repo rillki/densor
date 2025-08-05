@@ -7,10 +7,18 @@ import rk.densor;
 
 void main()
 {
-    auto v = new Tensor!(float, [2, 2])([1, 2, 3, 4]);
+    auto a = slice!float([2, 2], 0);
+    a.writeln;
+
+    writeln(a.flattened.sliced([1, 4]));
+    writeln([1, 2, 3, 4].sliced([4, 1]));
+
+
+
+    // auto v = new Tensor!(float, [2, 2])([1, 2, 3, 4]);
     // auto w = new Tensor!(float, [2, 2])(v);
     // v.data[] = 12;
-    writeln(v.data);
+    // writeln(v.data);
 
     // auto x = tensor!([2, 2])(-3);
     // auto y = tensor!([2, 2])([1, 2, 3, 4]);
