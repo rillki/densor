@@ -14,43 +14,34 @@ enum isTensor(T) = __traits(hasMember, T, "data") && isSlice!(typeof(T.data));
 /// Create new tensor.
 template tensor(size_t[] Shape, T = float)
 {
+    // alias InputArray = T[];
+    // alias RoR = T[][];
+
     /// Create a new zero-initilized tensor.
     auto tensor()
     {
         return new Tensor!(T, Shape)();
     }
     
-    /// Create new tensor with default value initialized.
-    auto tensor(T value)
+    /// Create new tensor from initialized values.
+    auto tensor(T[] input)
     {
-        return new Tensor!(T, Shape)(value);
+        return new Tensor!(T, Shape)(input);
     }
 
     /// Create tensor from existing data.
-    auto tensor(T[] data)
+    auto tensor(SomeInput)(SomeInput input)
     {
-        return new Tensor!(T, Shape)(data);
+        return new Tensor!(T, Shape)(input);
     }
-
-    // /// Create tensor from RoR data (array of arrays).
-    // auto tensor(RoR)(RoR data)
-    // {
-    //     return new Tensor!(T, Shape)(data);
-    // }
-
-    // /// Create tensor from slice.
-    // auto tensor(Slice!(T*, Shape.length) slice)
-    // {
-    //     return new Tensor!(T, Shape)(slice);
-    // }
 }
 
 class Tensor(T = float, size_t[] Shape)
 {
-    /// make aliases
+    /// alias of slice type
     alias SliceType = Slice!(T*, Shape.length);
 
-    /// slice values
+    /// slice object
     SliceType data;
 
     /// Create a new zero-initilized tensor.
@@ -198,41 +189,73 @@ unittest
         Test tensor template.
     */
     {
-        //
-    }
+        // init by default
+        auto v = tensor!([4])();
+        assert(v.shape == [4]);
+        assert(v.ndim == 1);
+        assert(v.data[] == [0, 0, 0, 0]);
+        assert(isTensor!(typeof(v)));
 
-    // auto w = tensor!([2, 2])([[1, 2], [3, 4]]);
-    // assert(w.shape == [2, 2]);
-    // assert(w.ndim == 2);
-    // assert(w.data[] == [[1, 2], [3, 4]]);
+        // init with value
+        auto vv = tensor!([4])(1);
+        assert(vv.shape == [4]);
+        assert(vv.ndim == 1);
+        assert(vv.data[] == [1, 1, 1, 1]);
 
-    // auto x = tensor!([4])(1);
-    // assert(x.shape == [4]);
-    // assert(x.ndim == 1);
-    // assert(x.data[] == [1, 1, 1, 1]);
+        // init with value
+        auto vvv = tensor!([4])([1, 2, 3, 4]);
+        assert(vvv.shape == [4]);
+        assert(vvv.ndim == 1);
+        assert(vvv.data[] == [1, 2, 3, 4]);
+ 
+        // init with array
+        auto w = tensor!([2, 2])([1, 2, 3, 4]);
+        assert(w.shape == [2, 2]);
+        assert(w.ndim == 2);
+        assert(w.data[] == [[1, 2], [3, 4]]);
 
-    // auto m = new Tensor!(float, [4, 1])(v.data);
-    // v.data[] = -1;
-    // assert(m.shape == [4, 1]);
-    // assert(m.ndim == 2);
-    // assert(m.data[] == [[1], [2], [3], [4]]);
-
-    // auto k = new Tensor!(float, [1, 4])(x.data);
-    // x.data[] = -1;
-    // assert(k.shape == [1, 4]);
-    // assert(k.ndim == 2);
-    // assert(k.data[] == [[1, 2, 3, 4]]);
-
+        // // init with RoR/ndarray
+        auto ww = tensor!([1, 4])([[1, 2, 3, 4]]);
+        assert(ww.shape == [1, 4]);
+        assert(ww.ndim == 2);
+        assert(ww.data[] == [[1, 2, 3, 4]]);
+        assertThrown!AssertError({ // mismatch in expected Shape and the shape of given data
+            new Tensor!(float, [4, 1])([[1, 2, 3, 4]]);
+        }());
     
-    // auto w = new Tensor!(float, [2, 2])(v);
-    // v.data[] = 12;
-    // writeln(v.data);
+        // init with RoR/ndarray
+        auto www = tensor!([4, 1])([[1], [2], [3], [4]]);
+        assert(www.shape == [4, 1]);
+        assert(www.ndim == 2);
+        assert(www.data[] == [[1], [2], [3], [4]]);
+        assertThrown!AssertError({ // mismatch in expected Shape and the shape of given data
+            new Tensor!(float, [1, 4])([[1], [2], [3], [4]]);
+        }());
 
-    // auto x = tensor!([2, 2])(-3);
-    // auto y = tensor!([2, 2])([1, 2, 3, 4]);
-    // auto z = tensor!([2, 2])(x);
-    // x.data[] = 1;
-    // writeln(x.data, "\n", z.data);
+        // init from the same slice type
+        auto s = slice!float([2, 2], 0);
+        auto x = tensor!([2, 2])(s);
+        assert(x.shape == [2, 2]);
+        assert(x.ndim == 2);
+        assert(x.data[] == [[0, 0], [0, 0]]);
 
+        // init from some slice type (slice type is different, so it is reshaped)
+        auto xx = tensor!([1, 4])(s);
+        assert(xx.shape == [1, 4]);
+        assert(xx.ndim == 2);
+        assert(xx.data[] == [[0, 0, 0, 0]]);
+
+        // init from tensor.slice object
+        auto xxx = tensor!([1, 4])(vv.data);
+        assert(xxx.shape == [1, 4]);
+        assert(xxx.ndim == 2);
+        assert(xxx.data[] == [[1, 1, 1, 1]]);
+
+        // init from another tensor
+        auto y = tensor!([2, 2])(vv);
+        assert(y.shape == [2, 2]);
+        assert(y.ndim == 2);
+        assert(y.data[] == [[1, 1], [1, 1]]);
+    }
 }
 
